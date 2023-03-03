@@ -4,7 +4,7 @@
 #include <string.h>
 #include "co-test.h"
 
-int g_count = 0;
+int g_count = 0; // 共享变量
 
 static void add_count() {
     g_count++;
