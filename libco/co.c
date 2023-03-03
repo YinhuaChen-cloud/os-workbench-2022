@@ -27,6 +27,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   struct co* p = malloc(sizeof(struct co));
   
   // 2. 把这个新的结构体存放于链表里, 供后续调度
+
   return p;
 }
 
