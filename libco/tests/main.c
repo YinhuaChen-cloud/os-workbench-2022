@@ -14,6 +14,7 @@ static int get_count() {
     return g_count;
 }
 
+// 这个函数的功能：循环100次，每次循环打印 X/Y 加上当前循环的次数，然后调用 co_yield 切换协程
 static void work_loop(void *arg) {
     const char *s = (const char*)arg;
     for (int i = 0; i < 100; ++i) {
@@ -29,7 +30,7 @@ static void work(void *arg) {
 
 static void test_1() {
 
-    struct co *thd1 = co_start("thread-1", work, "X");
+    struct co *thd1 = co_start("thread-1", work, "X"); 
     struct co *thd2 = co_start("thread-2", work, "Y");
 
     co_wait(thd1);
