@@ -1,5 +1,6 @@
 #include "co.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #define panic(...) printf(__VA_ARGS__); assert(0);
 
