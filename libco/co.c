@@ -5,14 +5,8 @@
 
 #define panic(...) printf(__VA_ARGS__); assert(0);
 
-// 问题1：LD_LIBRARY_PATH 是干啥用的？
-// 回答：用来告诉 动态链接加载器 从哪里寻找 apps所需的动态共享库, 如果要运行的程序使用了动态链接库，需要设置这个变量才能正确运行程序
-
 struct co {
-  // 
 };
-
-// TODO: 建议在讲义中寻找更多的、关于这三个API的提示说明
 
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
 // * 新创建的协程从函数 func 开始执行，并传入参数 arg。新创建的协程不会立即执行，而是调用 co_start 的协程继续执行。
@@ -26,9 +20,14 @@ struct co {
 // 新状态机的 %rsp 寄存器应该指向它独立的堆栈，%rip 寄存器应该指向 co_start 传递的 func 参数。
 // 根据 32/64-bit，参数也应该被保存在正确的位置 (x86-64 参数在 %rdi 寄存器，而 x86 参数在堆栈中)。
 // main 天然是个状态机，就对应了一个协程；
+
+// struct co *thd1 = co_start("thread-1", work, "X"); 
 struct co *co_start(const char *name, void (*func)(void *), void *arg) {
-  panic("co_start not implemented yet\n");
-  return NULL;
+  // 1. 创建一个状态机，状态被存在 struct co 结构体中
+  struct co* p = malloc(sizeof(struct co));
+  
+  // 2. 把这个新的结构体存放于链表里, 供后续调度
+  return p;
 }
 
 // co_wait(co) 表示当前协程需要等待，直到 co 协程的执行完成才能继续执行 (类似于 pthread_join)。
