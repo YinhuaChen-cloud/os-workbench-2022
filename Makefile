@@ -7,7 +7,7 @@ $(error Should make in each lab's directory)
 endif
 
 # 注意，虽然这个Makefile位于 os-workbench-2022 目录下，但它通常由子目录下的Makefile include，因此所执行的命令(比如 find)所位于的目录在子目录下
-SRCS   := $(shell find . -maxdepth 1 -name "*.c")
+SRCS   := $(shell find . -maxdepth 1 -name "*.c" -or -name "*.S")
 DEPS   := $(shell find . -maxdepth 1 -name "*.h") $(SRCS)
 CFLAGS += -O1 -std=gnu11 -ggdb -Wall -Werror -Wno-unused-result -Wno-unused-value -Wno-unused-variable
 

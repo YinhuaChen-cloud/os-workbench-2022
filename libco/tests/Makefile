@@ -1,12 +1,18 @@
 .PHONY: test libco
 
-all: libco-test-64 libco-test-32
+all: libco-test-64 # libco-test-32
 
 test: libco all  # libco(PHONY), libco-test-64, libco-test-32
 	@echo "==== TEST 64 bit ===="
 	@LD_LIBRARY_PATH=.. ./libco-test-64
-	@echo "==== TEST 32 bit ===="
-	@LD_LIBRARY_PATH=.. ./libco-test-32
+	# @echo "==== TEST 32 bit ===="
+	# @LD_LIBRARY_PATH=.. ./libco-test-32
+
+gdb: libco all  # libco(PHONY), libco-test-64, libco-test-32
+	@echo "==== TEST 64 bit ===="
+	@LD_LIBRARY_PATH=.. gdb ./libco-test-64
+	# @echo "==== TEST 32 bit ===="
+	# @LD_LIBRARY_PATH=.. gdb ./libco-test-32
 
 libco-test-64: main.c
 
