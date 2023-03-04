@@ -23,6 +23,18 @@ struct co {
 #define LINK_MAXSIZE 128 // 数组最大长度为128
 struct co* co_array[LINK_MAXSIZE] = {0}; // 这里存放的是 struct co 指针
 
+// 根据 oldvalue 找到协程数组中对应的元素，然后把该元素替换成 newvalue
+static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
+  int i; 
+  for(i = 0; i < LINK_MAXSIZE; i++) {
+    if(oldvalue == co_array[i]) {
+      co_array[i] = newvalue;
+      break;
+    }
+  }
+  assert(i < LINK_MAXSIZE); // 认为一定能找到这个值
+} 
+
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
 // * 新创建的协程从函数 func 开始执行，并传入参数 arg。新创建的协程不会立即执行，而是(调用 co_start 的协程)(这个“调用 co_start 的协程就是main啦”)继续执行。
 // * 使用协程的应用程序不需要知道 struct co 的具体定义，因此请把这个定义留在 co.c 中；框架代码中并没有限定 struct co 结构体的设计，所以你可以自由发挥。
@@ -44,14 +56,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   p->state = RUNNABLE;
 
   // 2. 把这个新的结构体存放于数组里, 供后续调度
-  int i; 
-  for(i = 0; i < LINK_MAXSIZE; i++) {
-    if(NULL == co_array[i]) {
-      co_array[i] = p;
-      break;
-    }
-  }
-  assert(i < LINK_MAXSIZE);
+  co_array_replace(NULL, p)
 
   return p; // 程序执行流回到 main 里
 }
@@ -67,7 +72,15 @@ void co_wait(struct co *co) {
     // 如果 co 的状态不为 DONE, 则继续进行调度（切换协程（main本身也是个协程））
     co_yield();
   }
-  // 释放已经 DONE 了的协程，并且把它从链表中取出
+  // 释放已经 DONE 了的协程，并且把它从数组中取出
+  int i; 
+  for(i = 0; i < LINK_MAXSIZE; i++) {
+    if(NULL == co_array[i]) {
+      co_array[i] = p;
+      break;
+    }
+  }
+  assert(i < LINK_MAXSIZE);
   free(co);
 }
 
