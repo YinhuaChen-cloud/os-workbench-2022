@@ -17,17 +17,11 @@ struct co {
 
   // 协程状态
   Co_STATE state;
-  // 链表上一个
-  struct co* prev;
-  // 链表下一个
-  struct co* next;
 };
 
-// 用来存放所有协程Co_STATE结构体的链表 (不包括main)
-struct co*link_head = NULL;
-struct co*link_tail = NULL;
-int link_size = 0; // 链表大小
-#define LINK_MAXSIZE 128 // 链表最大长度为128
+// 用来存放所有协程Co_STATE结构体的数组 (不包括main)
+#define LINK_MAXSIZE 128 // 数组最大长度为128
+struct co* co_array[LINK_MAXSIZE] = {0}; // 这里存放的是 struct co 指针
 
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
 // * 新创建的协程从函数 func 开始执行，并传入参数 arg。新创建的协程不会立即执行，而是(调用 co_start 的协程)(这个“调用 co_start 的协程就是main啦”)继续执行。
@@ -48,23 +42,15 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   struct co* p = malloc(sizeof(struct co));
   // 对状态机状态进行初始化
   p->state = RUNNABLE;
-  p->prev = NULL; 
-  p->next = NULL; 
 
-  // 2. 把这个新的结构体存放于链表里, 供后续调度
-  if(link_tail) { // 如果此时链表不为空，把新增节点放到链表尾部
-    link_tail->next = p;
-    p->prev = link_tail;
-    link_tail = p;  // 更新链表尾部
-    link_size++;
-    assert(link_size <= LINK_MAXSIZE);
-  } else { // 如果此时链表为空, 则链表头和链表尾都是这个新增节点 TODO: 我们好像没有进行删除链表的操作
-    link_head = p;
-    link_tail = p;
-    link_size++;
+  // 2. 把这个新的结构体存放于数组里, 供后续调度
+  int i; 
+  for(i = 0; i < LINK_MAXSIZE; i++) {
+    if(co_array[i])    ;
   }
+  assert(i < LINK_MAXSIZE);
 
-  return p; // 程序执行流回到 test1 里
+  return p; // 程序执行流回到 main 里
 }
 
 // co_wait(co) 表示当前协程需要等待，直到 co 协程的执行完成才能继续执行 (类似于 pthread_join)。
