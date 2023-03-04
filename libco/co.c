@@ -5,12 +5,12 @@
 
 #define panic(...) printf(__VA_ARGS__); assert(0);
 
-enum Co_STATE { // 协程状态 RUNNABLE ...
+typedef enum Co_STATE { // 协程状态 RUNNABLE ...
   RUNNING,
   WAITING
-};
+} Co_STATE;
 
-typedef enum Co_STATE Co_STATE;
+// typedef enum Co_STATE Co_STATE;
 
 struct co {
   // 寄存器状态
