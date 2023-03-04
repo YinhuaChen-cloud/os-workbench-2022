@@ -12,8 +12,9 @@ typedef enum Co_STATE { // 协程状态 RUNNABLE ...
 
 struct co {
   // 每个协程都得有自己的栈
-  // 寄存器状态
 
+  // 寄存器状态
+  uint64_t gprs[16];
   // 协程状态
   Co_STATE state;
 };
