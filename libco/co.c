@@ -53,8 +53,10 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
     link_tail = p;  // 更新链表尾部
     link_size++;
     assert(link_size <= LINK_MAXSIZE);
-  } else { // 如果此时链表为空
-    link
+  } else { // 如果此时链表为空, 则链表头和链表尾都是这个新增节点 TODO: 我们好像没有进行删除链表的操作
+    link_head = p;
+    link_tail = p;
+    link_size++;
   }
 
   return p; // 程序执行流回到 test1 里
