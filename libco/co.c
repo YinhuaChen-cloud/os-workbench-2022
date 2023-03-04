@@ -5,7 +5,10 @@
 
 #define panic(...) printf(__VA_ARGS__); assert(0);
 
-enum  // 协程状态 RUNNABLE ...
+enum Co_STATE { // 协程状态 RUNNABLE ...
+  RUNNING,
+  WAITING
+};
 
 struct co {
   // 寄存器状态
