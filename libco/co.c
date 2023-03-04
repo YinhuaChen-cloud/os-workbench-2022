@@ -5,7 +5,11 @@
 
 #define panic(...) printf(__VA_ARGS__); assert(0);
 
+enum  // 协程状态 RUNNABLE ...
+
 struct co {
+  // 寄存器状态
+  // 协程状态
 };
 
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
@@ -28,14 +32,14 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   
   // 2. 把这个新的结构体存放于链表里, 供后续调度
 
-  return p;
+  return p; // 程序执行流回到 test1 里
 }
 
 // co_wait(co) 表示当前协程需要等待，直到 co 协程的执行完成才能继续执行 (类似于 pthread_join)。
 // * 在被等待的协程结束后、 co_wait() 返回前，co_start 分配的 struct co 需要被释放。如果你使用 malloc()，使用 free() 释放即可。
 // * 因此，每个协程只能被 co_wait 一次 (使用协程库的程序应当保证除了初始协程外，其他协程都必须被 co_wait 恰好一次，否则会造成内存泄漏)。
 
-// co_wait 会等待状态机进入结束状态，即 func() 的返回。
+// co_wait 会等待状态机进入结束状态，即 func() 的返回。感觉这里要进行一个进程切换？
 void co_wait(struct co *co) {
   panic("co_wait not implemented yet\n");
 }
