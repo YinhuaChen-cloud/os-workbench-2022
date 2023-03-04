@@ -129,8 +129,8 @@ void co_yield() {
   // 切换的原理：对通用寄存器进行切换，return_addr(比如RISCV64中的ra)寄存器要加上函数地址
   // (切换寄存器的同时也会切换栈)
   assert(-1 != rand_index);
-  printf("gprs pointer = 0x%p\n", &(co_array[rand_index]->context));
-  printf("gprs pointer = 0x%p\n", &(co_array[running_index]->context));
+  // printf("gprs pointer = 0x%p\n", &(co_array[rand_index]->context));
+  // printf("gprs pointer = 0x%p\n", &(co_array[running_index]->context));
   co_array[running_index]->state = RUNNABLE;
   co_array[rand_index]->state = RUNNING;
   int tmp_running_index = running_index;
