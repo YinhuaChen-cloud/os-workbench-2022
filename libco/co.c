@@ -81,7 +81,7 @@ void co_wait(struct co *co) {
   // 释放已经 DONE 了的协程，并且把它从链表中取出
   if(co->prev && co->next) {
     co->prev = co->next;
-    co->next = co->prev
+    co->next = co->prev;
   }
   else if(!(co->prev) && co->next) { // 链表头
     link_head = co->next;
