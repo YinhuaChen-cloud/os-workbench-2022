@@ -18,6 +18,8 @@ struct co {
   Co_STATE state;
 };
 
+// TODO：也许我需要为 main 协程单独弄一个struct co结构体？（用来保存栈、以及寄存器状态）
+
 // 用来存放所有协程Co_STATE结构体的数组 (不包括main)
 #define CO_MAXSIZE 128 // 数组最大长度为128
 struct co* co_array[CO_MAXSIZE] = {0}; // 这里存放的是 struct co 指针
