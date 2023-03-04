@@ -78,7 +78,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   struct co* p = malloc(sizeof(struct co));
   // 设定状态机的栈，函数入口、函数参数（特别注意，栈顶是越来越往下的，所以要设置在数组的尾部）
   // 设定状态机的栈（只需要设定 rsp，不需要设定 rbp）
-  p->context.gprs[6] = (&(p->stack[STACK_SIZE-8]));
+  p->context.gprs[6] = (uint64_t)(&(p->stack[STACK_SIZE-8]));
   // 设定状态机的函数入口
 
   // 只有一个参数 arg, 存放在 rdi 寄存器中
