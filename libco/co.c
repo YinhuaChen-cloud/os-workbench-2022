@@ -96,7 +96,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   // 设定状态机的栈指针，同时也是在设定栈（只需要设定 rsp，不需要设定 rbp）
   p->context.gprs[6] = (uint64_t)(&(p->stack[STACK_SIZE-16]));
   // 设定状态机的在被销毁时需要进入的函数
-  *(uint64_t *)(&(p->stack[STACK_SIZE-8])) = (uint64_t)co_exit;
+  // *(uint64_t *)(&(p->stack[STACK_SIZE-8])) = (uint64_t)co_exit;
   // 设定状态机的函数入口, 存放到 rsp 指向的地方
   *(uint64_t *)(&(p->stack[STACK_SIZE-16])) = (uint64_t)func;
   // 只有一个参数 arg, 存放在 rdi 寄存器中
