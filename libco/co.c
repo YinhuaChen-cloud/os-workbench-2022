@@ -27,13 +27,13 @@ int co_size = 0; // 用来指明协程的数量
 // 根据 oldvalue 找到协程数组中对应的元素，然后把该元素替换成 newvalue
 static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
   int i; 
-  for(i = 0; i < LINK_MAXSIZE; i++) {
+  for(i = 0; i < CO_MAXSIZE; i++) {
     if(oldvalue == co_array[i]) {
       co_array[i] = newvalue;
       break;
     }
   }
-  assert(i < LINK_MAXSIZE); // 认为一定能找到这个值
+  assert(i < CO_MAXSIZE); // 认为一定能找到这个值
 } 
 
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
