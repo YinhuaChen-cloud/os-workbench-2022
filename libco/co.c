@@ -19,6 +19,8 @@ struct context {
 #define STACK_SIZE 65536
 // TODO: main的结构体应该不会被free?
 struct co {
+  // 协程的名字（只是为了方便debug）
+  char *name;
   // 每个协程都得有自己的栈 (除了main，main的栈由glibc提供)
   uint8_t stack[STACK_SIZE];
   // 上下文(寄存器状态)
@@ -76,6 +78,8 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   }
   // 1. 创建一个状态机，状态被存在 struct co 结构体中
   struct co* p = malloc(sizeof(struct co));
+  // 设定状态机的名字（为了方便debug)
+  p->name = name;
   // 设定状态机的栈，函数入口、函数参数（特别注意，栈顶是越来越往下的，所以要设置在数组的尾部）
   // 设定状态机的栈（只需要设定 rsp，不需要设定 rbp）
   p->context.gprs[6] = (uint64_t)(&(p->stack[STACK_SIZE-8]));
