@@ -20,7 +20,7 @@ struct context {
 // TODO: main的结构体应该不会被free?
 struct co {
   // 协程的名字（只是为了方便debug）
-  char *name;
+  const char *name;
   // 每个协程都得有自己的栈 (除了main，main的栈由glibc提供)
   uint8_t stack[STACK_SIZE];
   // 上下文(寄存器状态)
