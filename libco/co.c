@@ -90,7 +90,8 @@ void co_yield() {
   // 随机选择一个 RUNNABLE 的协程，继续执行（有可能选到自己）
   // 取 0 ~ CO_MAXSIZE 的一个随机数
   int rand_index;
-  while(co_size > 0 &&) { // TODO：有可能 co_size > 0，但所有现存的协程状态都不是 RUNNABLE
+  // while(co_size > 0 &&) { // TODO：有可能 co_size > 0，但所有现存的协程状态都不是 RUNNABLE
+  while(co_size > 0) { 
     rand_index = rand() % CO_MAXSIZE; 
     if(NULL == co_array[rand_index] || RUNNABLE != co_array[rand_index]->state) {
       continue;
