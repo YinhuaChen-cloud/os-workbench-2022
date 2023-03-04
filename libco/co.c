@@ -16,10 +16,11 @@ struct context {
   uint64_t gprs[16];
 };
 
+#define STACK_SIZE 65536
 // TODO: main的结构体应该不会被free?
 struct co {
   // 每个协程都得有自己的栈 (除了main，main的栈由glibc提供)
-
+  uint8_t stack[STACK_SIZE];
   // 上下文(寄存器状态)
   struct context context;
   // 协程状态
