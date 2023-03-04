@@ -73,14 +73,8 @@ void co_wait(struct co *co) {
     co_yield();
   }
   // 释放已经 DONE 了的协程，并且把它从数组中取出
-  int i; 
-  for(i = 0; i < LINK_MAXSIZE; i++) {
-    if(NULL == co_array[i]) {
-      co_array[i] = p;
-      break;
-    }
-  }
-  assert(i < LINK_MAXSIZE);
+  co_array_replace(co, NULL);
+
   free(co);
 }
 
