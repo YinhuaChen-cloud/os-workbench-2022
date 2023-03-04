@@ -89,15 +89,15 @@ void co_yield() {
   // 随机选择一个 RUNNABLE 的协程，继续执行（有可能选到自己）
   // 取 0 ~ CO_MAXSIZE 的一个随机数
   int rand_index;
-  while(co_size > 0 &&) {
-    rand_index = rand() % CO_MAXSIZE; 
-    if(NULL == co_array[rand_index] || RUNNABLE != co_array[rand_index]->state) {
-      continue;
-    } else {
-      // 选择到了一个状态为 RUNNABLE 的协程，接下来我们要切换过去
-      // TODO: We are here
-    }
-  }
+  // while(co_size > 0 &&) {
+  //   rand_index = rand() % CO_MAXSIZE; 
+  //   if(NULL == co_array[rand_index] || RUNNABLE != co_array[rand_index]->state) {
+  //     continue;
+  //   } else {
+  //     // 选择到了一个状态为 RUNNABLE 的协程，接下来我们要切换过去
+  //     TODO: We are here
+  //   }
+  // }
 
   // 从数组中随机取一个 RUNNABLE 的co结构体，然后切换过去
   panic("co_yield not implemented yet\n");
