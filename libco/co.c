@@ -11,11 +11,15 @@ typedef enum Co_STATE { // 协程状态 RUNNABLE ...
   DONE
 } Co_STATE;
 
+struct context {
+  uint64_t gprs[16];
+};
+
 struct co {
   // 每个协程都得有自己的栈
 
-  // 寄存器状态
-  uint64_t gprs[16];
+  // 上下文(寄存器状态)
+  struct context context;
   // 协程状态
   Co_STATE state;
 };
@@ -110,9 +114,8 @@ void co_yield() {
   // 切换的原理：对通用寄存器进行切换，return_addr(比如RISCV64中的ra)寄存器要加上函数地址
   // (切换寄存器的同时也会切换栈)
   assert(-1 != rand_index);
-  printf("gprs pointer = 0x%p\n", co_array[rand_index]->gprs);
-  printf("gprs pointer = 0x%p\n", &(co_array[rand_index]->gprs[0]));
-  extern void context_switch();
+  printf("gprs pointer = 0x%p\n", &(co_array[rand_index]->context));
+  extern void context_switch(co_array[rand_index]);
   context_switch();
 
   panic("co_yield not implemented yet\n");
