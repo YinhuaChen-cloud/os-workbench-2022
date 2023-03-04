@@ -15,8 +15,9 @@ struct context {
   uint64_t gprs[16];
 };
 
+// TODO: main的结构体应该不会被free?
 struct co {
-  // 每个协程都得有自己的栈
+  // 每个协程都得有自己的栈 (除了main，main的栈由glibc提供)
 
   // 上下文(寄存器状态)
   struct context context;
@@ -25,12 +26,15 @@ struct co {
 };
 
 // TODO：也许我需要为 main 协程单独弄一个struct co结构体？（用来保存栈、以及寄存器状态）
-// 回答：栈不需要，main的从一开始就有，glibc提供的
+// 回答：main 协程的上下文也需要放进 context 里，放进数组中，否则，其它线程无法通过调用
+// co_yield 切换回到 main 协程里，但main不需要自己的stack，它已经有了glibc提供的stack
 
 // 用来存放所有协程Co_STATE结构体的数组 (不包括main)
 #define CO_MAXSIZE 128 // 数组最大长度为128
 struct co* co_array[CO_MAXSIZE] = {0}; // 这里存放的是 struct co 指针
 int co_size = 0; // 用来指明协程的数量
+int init_flag = 1; // 表示 co_start 是第一次被调用
+int running_index = 0; // 正在运行的协程的下标
 
 // 根据 oldvalue 找到协程数组中对应的元素，然后把该元素替换成 newvalue
 static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
@@ -59,6 +63,15 @@ static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
 
 // struct co *thd1 = co_start("thread-1", work, "X"); 
 struct co *co_start(const char *name, void (*func)(void *), void *arg) {
+  // 如果是第一次调用 co_start，那么创建一个 struct co 结构体供main使用
+  if(init_flag) {
+    // 约定：main 的结构体存放在 index 0 上
+    struct co* p = malloc(sizeof(struct co));
+    p->state = RUNNING;
+    co_array[0] = p;
+    co_size++;
+    init_flag = 0;
+  }
   // 1. 创建一个状态机，状态被存在 struct co 结构体中
   struct co* p = malloc(sizeof(struct co));
   // 对状态机状态进行初始化
@@ -100,7 +113,7 @@ void co_yield() {
   // 取 0 ~ CO_MAXSIZE 的一个随机数
   int rand_index = -1;
   // while(co_size > 0 &&) { // TODO：有可能 co_size > 0，但所有现存的协程状态都不是 RUNNABLE
-  while(co_size > 0) { 
+  while(co_size > 1) {  // TODO: co_size 应该最少为1 - main？
     rand_index = rand() % CO_MAXSIZE; 
     if(NULL == co_array[rand_index] || RUNNABLE != co_array[rand_index]->state) {
       continue;
@@ -116,9 +129,10 @@ void co_yield() {
   // (切换寄存器的同时也会切换栈)
   assert(-1 != rand_index);
   printf("gprs pointer = 0x%p\n", &(co_array[rand_index]->context));
-  extern void context_switch(struct context* next_context);
-  // extern void context_switch(co_array[rand_index]);
-  context_switch(&(co_array[rand_index]->context));
+  int tmp_running_index = running_index;
+  running_index = rand_index; 
+  extern void context_switch(struct context* cur_context, struct context* next_context);
+  context_switch(&(co_array[tmp_running_index]->context), &(co_array[running_index]->context));
 
   panic("co_yield not implemented yet\n");
 }
