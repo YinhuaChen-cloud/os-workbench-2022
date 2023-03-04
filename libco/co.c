@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdint.h>
 
 #define panic(...) printf(__VA_ARGS__); assert(0);
 
