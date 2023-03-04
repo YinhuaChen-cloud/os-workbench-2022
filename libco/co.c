@@ -56,7 +56,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   p->state = RUNNABLE;
 
   // 2. 把这个新的结构体存放于数组里, 供后续调度
-  co_array_replace(NULL, p)
+  co_array_replace(NULL, p);
 
   return p; // 程序执行流回到 main 里
 }
