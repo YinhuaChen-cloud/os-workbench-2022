@@ -21,7 +21,7 @@ struct co {
 
 // 用来存放所有协程Co_STATE结构体的数组 (不包括main)
 #define CO_MAXSIZE 128 // 数组最大长度为128
-struct co* co_array[LINK_MAXSIZE] = {0}; // 这里存放的是 struct co 指针
+struct co* co_array[CO_MAXSIZE] = {0}; // 这里存放的是 struct co 指针
 int co_size = 0; // 用来指明协程的数量
 
 // 根据 oldvalue 找到协程数组中对应的元素，然后把该元素替换成 newvalue
