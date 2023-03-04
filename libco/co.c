@@ -61,6 +61,7 @@ static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
 // 如果是 main，它会回到自己原先的程序，然后直接终止整个程序
 static void co_exit() {
   co_array[running_index]->state = DONE;
+  printf("%s is done\n", co_array[running_index]->name);
   co_yield();
 }
 
