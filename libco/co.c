@@ -1,3 +1,8 @@
+/********
+ * 
+ * 我这个co.c程序似乎没法并行执行，只能单核并发执行，因为 running_index 只有一个
+ * 
+*/
 #include "co.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -52,6 +57,13 @@ static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
   assert(i < CO_MAXSIZE); // 认为一定能找到这个值
 } 
 
+// 当一个协程退出（除了main），将会进入到这个函数
+// 如果是 main，它会回到自己原先的程序，然后直接终止整个程序
+static void co_exit() {
+  co_array[running_index]->state = DONE;
+  co_yield();
+}
+
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
 // * 新创建的协程从函数 func 开始执行，并传入参数 arg。新创建的协程不会立即执行，而是(调用 co_start 的协程)(这个“调用 co_start 的协程就是main啦”)继续执行。
 // * 使用协程的应用程序不需要知道 struct co 的具体定义，因此请把这个定义留在 co.c 中；框架代码中并没有限定 struct co 结构体的设计，所以你可以自由发挥。
@@ -81,10 +93,12 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   // 设定状态机的名字（为了方便debug)
   p->name = name;
   // 设定状态机的栈，函数入口、函数参数（特别注意，栈顶是越来越往下的，所以要设置在数组的尾部）
-  // 设定状态机的栈（只需要设定 rsp，不需要设定 rbp）
-  p->context.gprs[6] = (uint64_t)(&(p->stack[STACK_SIZE-8]));
+  // 设定状态机的栈指针，同时也是在设定栈（只需要设定 rsp，不需要设定 rbp）
+  p->context.gprs[6] = (uint64_t)(&(p->stack[STACK_SIZE-16]));
+  // 设定状态机的在被销毁时需要进入的函数
+  *(uint64_t *)(&(p->stack[STACK_SIZE-8])) = (uint64_t)co_exit;
   // 设定状态机的函数入口, 存放到 rsp 指向的地方
-  *(uint64_t *)(&(p->stack[STACK_SIZE-8])) = (uint64_t)func;
+  *(uint64_t *)(&(p->stack[STACK_SIZE-16])) = (uint64_t)func;
   // 只有一个参数 arg, 存放在 rdi 寄存器中
   p->context.gprs[5] = (uint64_t)arg;
   // 对状态机状态进行初始化
