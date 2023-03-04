@@ -8,6 +8,7 @@
 
 typedef enum Co_STATE { // 协程状态 RUNNABLE ...
   RUNNABLE,
+  RUNNING,
   DONE
 } Co_STATE;
 
@@ -129,6 +130,9 @@ void co_yield() {
   // (切换寄存器的同时也会切换栈)
   assert(-1 != rand_index);
   printf("gprs pointer = 0x%p\n", &(co_array[rand_index]->context));
+  printf("gprs pointer = 0x%p\n", &(co_array[running_index]->context));
+  co_array[running_index]->state = RUNNABLE;
+  co_array[rand_index]->state = RUNNING;
   int tmp_running_index = running_index;
   running_index = rand_index; 
   extern void context_switch(struct context* cur_context, struct context* next_context);
