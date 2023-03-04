@@ -8,7 +8,8 @@
 typedef enum Co_STATE { // 协程状态 RUNNABLE ...
   RUNNABLE,
   RUNNING,
-  WAITING
+  WAITING,
+  DONE
 } Co_STATE;
 
 struct co {
@@ -16,6 +17,8 @@ struct co {
 
   // 协程状态
   Co_STATE state;
+  // 链表上一个
+  struct co* prev;
   // 链表下一个
   struct co* next;
 };
@@ -45,11 +48,13 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   struct co* p = malloc(sizeof(struct co));
   // 对状态机状态进行初始化
   p->state = RUNNABLE;
+  p->prev = NULL; 
   p->next = NULL; 
 
   // 2. 把这个新的结构体存放于链表里, 供后续调度
   if(link_tail) { // 如果此时链表不为空，把新增节点放到链表尾部
     link_tail->next = p;
+    p->prev = link_tail;
     link_tail = p;  // 更新链表尾部
     link_size++;
     assert(link_size <= LINK_MAXSIZE);
@@ -68,7 +73,14 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
 
 // co_wait 会等待状态机进入结束状态，即 func() 的返回。感觉这里要进行一个进程切换？
 void co_wait(struct co *co) {
-  panic("co_wait not implemented yet\n");
+  // 只有在 co 所指向的状态机被移除了，这个函数才会返回
+  while(co->state != DONE) {
+    // 如果 co 的状态不为 DONE, 则继续进行调度（切换协程（main本身也是个协程））
+    co_yield();
+  }
+  // 释放已经 DONE 了的协程，并且把它从链表中取出
+  co->next
+  free(co);
 }
 
 // co_yield() 实现协程的切换。协程运行后一直在 CPU 上执行，直到 func 函数返回或调用 co_yield 使当前运行的协程暂时放弃执行。co_yield 时
