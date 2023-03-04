@@ -86,8 +86,10 @@ void co_wait(struct co *co) {
 
 // co_yield 会将当前运行协程的寄存器保存到共享内存中，然后选择一个另一个协程，将寄存器加载到 CPU 上，就完成了 “状态机的切换”；
 void co_yield() {
-  int rand_index = rand() % CO_MAXSIZE; 
-  printf("rand = %d\n", rand_index);
+  for(int i = 0; i < 1280; i++) {
+    int rand_index = rand() % CO_MAXSIZE; 
+    printf("rand = %d\n", rand_index);
+  }
   // 从数组中随机取一个 RUNNABLE 的co结构体，然后切换过去
   panic("co_yield not implemented yet\n");
 }
