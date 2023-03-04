@@ -98,7 +98,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   // 设定状态机的在被销毁时需要进入的函数
   // *(uint64_t *)(&(p->stack[STACK_SIZE-8])) = (uint64_t)co_exit;
   // 设定状态机的函数入口, 存放到 rsp 指向的地方
-  *(uint64_t *)(&(p->stack[STACK_SIZE-8])) = (uint64_t)func;
+  *(uint64_t *)(&(p->stack[STACK_SIZE-8])) = (uint64_t)func; // 8可以，16不行的原因很可能是少了一些类似 金丝雀guard 之类的东西
   // 只有一个参数 arg, 存放在 rdi 寄存器中
   p->context.gprs[5] = (uint64_t)arg;
   // 对状态机状态进行初始化
