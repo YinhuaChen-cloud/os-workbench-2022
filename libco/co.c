@@ -93,7 +93,7 @@ void co_wait(struct co *co) {
 void co_yield() {
   // 随机选择一个 RUNNABLE 的协程，继续执行（有可能选到自己）
   // 取 0 ~ CO_MAXSIZE 的一个随机数
-  int rand_index;
+  int rand_index = -1;
   // while(co_size > 0 &&) { // TODO：有可能 co_size > 0，但所有现存的协程状态都不是 RUNNABLE
   while(co_size > 0) { 
     rand_index = rand() % CO_MAXSIZE; 
@@ -109,6 +109,7 @@ void co_yield() {
   // 会切换回这里。此时，只要从这里 return，就可以返回到先前调用 yield() 的地方，继续往下执行了
   // 切换的原理：对通用寄存器进行切换，return_addr(比如RISCV64中的ra)寄存器要加上函数地址
   // (切换寄存器的同时也会切换栈)
+  assert(-1 != rand_index);
   printf("gprs pointer = 0x%p\n", co_array[rand_index]->gprs);
   extern void context_switch();
   context_switch();
