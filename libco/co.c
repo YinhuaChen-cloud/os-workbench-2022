@@ -36,7 +36,7 @@ struct co {
 struct co* co_array[CO_MAXSIZE] = {0}; // 这里存放的是 struct co 指针
 int co_size = 0; // 用来指明协程的数量
 int init_flag = 1; // 表示 co_start 是第一次被调用
-int running_index = 0; // 正在运行的协程的下标
+volatile int running_index = 0; // 正在运行的协程的下标
 
 // 根据 oldvalue 找到协程数组中对应的元素，然后把该元素替换成 newvalue
 static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
@@ -141,7 +141,7 @@ void co_yield() {
   // printf("gprs pointer = 0x%p\n", &(co_array[running_index]->context));
   co_array[running_index]->state = RUNNABLE;
   co_array[rand_index]->state = RUNNING;
-  int tmp_running_index = running_index;
+  volatile int tmp_running_index = running_index;
   running_index = rand_index; 
   extern void context_switch(struct context* cur_context, struct context* next_context);
   context_switch(&(co_array[tmp_running_index]->context), &(co_array[running_index]->context));
