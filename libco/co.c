@@ -115,7 +115,8 @@ void co_yield() {
   // (切换寄存器的同时也会切换栈)
   assert(-1 != rand_index);
   printf("gprs pointer = 0x%p\n", &(co_array[rand_index]->context));
-  extern void context_switch(co_array[rand_index]);
+  extern void context_switch();
+  // extern void context_switch(co_array[rand_index]);
   context_switch();
 
   panic("co_yield not implemented yet\n");
