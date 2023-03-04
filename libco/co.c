@@ -6,18 +6,25 @@
 #define panic(...) printf(__VA_ARGS__); assert(0);
 
 typedef enum Co_STATE { // 协程状态 RUNNABLE ...
+  RUNNABLE,
   RUNNING,
   WAITING
 } Co_STATE;
-
-// typedef enum Co_STATE Co_STATE;
 
 struct co {
   // 寄存器状态
 
   // 协程状态
   Co_STATE state;
+  // 链表下一个
+  struct co* next;
 };
+
+// 用来存放所有协程Co_STATE结构体的链表
+struct co*link_head = NULL;
+struct co*link_tail = NULL;
+int link_size = 0; // 链表大小
+#define LINK_MAXSIZE 128 // 链表最大长度为128
 
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
 // * 新创建的协程从函数 func 开始执行，并传入参数 arg。新创建的协程不会立即执行，而是调用 co_start 的协程继续执行。
@@ -36,8 +43,19 @@ struct co {
 struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   // 1. 创建一个状态机，状态被存在 struct co 结构体中
   struct co* p = malloc(sizeof(struct co));
-  
+  // 对状态机状态进行初始化
+  p->state = RUNNABLE;
+  p->next = NULL; 
+
   // 2. 把这个新的结构体存放于链表里, 供后续调度
+  if(link_tail) { // 如果此时链表不为空，把新增节点放到链表尾部
+    link_tail->next = p;
+    link_tail = p;  // 更新链表尾部
+    link_size++;
+    assert(link_size <= LINK_MAXSIZE);
+  } else { // 如果此时链表为空
+    link
+  }
 
   return p; // 程序执行流回到 test1 里
 }
