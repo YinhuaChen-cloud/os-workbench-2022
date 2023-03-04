@@ -76,6 +76,10 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   }
   // 1. 创建一个状态机，状态被存在 struct co 结构体中
   struct co* p = malloc(sizeof(struct co));
+  // 设定状态机的栈，函数入口、函数参数（特别注意，栈顶是越来越往下的，所以要设置在数组的尾部）
+
+  // 只有一个参数 arg, 存放在 rdi 寄存器中
+  p->context.gprs[5] = arg;
   // 对状态机状态进行初始化
   p->state = RUNNABLE;
 
