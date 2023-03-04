@@ -14,7 +14,7 @@ struct co {
   // 寄存器状态
 
   // 协程状态
-  enum Co_STATE state;
+  Co_STATE state;
 };
 
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
