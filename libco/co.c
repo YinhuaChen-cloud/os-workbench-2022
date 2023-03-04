@@ -46,7 +46,10 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   // 2. 把这个新的结构体存放于数组里, 供后续调度
   int i; 
   for(i = 0; i < LINK_MAXSIZE; i++) {
-    if(co_array[i])    ;
+    if(NULL = co_array[i]) {
+      co_array[i] = p;
+      break;
+    }
   }
   assert(i < LINK_MAXSIZE);
 
