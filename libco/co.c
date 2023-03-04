@@ -150,7 +150,6 @@ void co_yield() {
   extern void context_switch(struct context* cur_context, struct context* next_context);
   context_switch(&(co_array[tmp_running_index]->context), &(co_array[running_index]->context));
 
-  // panic("co_yield not implemented yet\n");
 }
 
 // 关于实现寄存器切换，这里要使用内联汇编对寄存器进行直接操作。
