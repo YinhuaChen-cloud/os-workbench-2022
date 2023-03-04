@@ -10,6 +10,8 @@ enum Co_STATE { // 协程状态 RUNNABLE ...
   WAITING
 };
 
+typedef enum Co_STATE Co_STATE;
+
 struct co {
   // 寄存器状态
 
