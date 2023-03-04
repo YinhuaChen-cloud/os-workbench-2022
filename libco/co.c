@@ -106,6 +106,7 @@ void co_yield() {
   // 切换的原理：对通用寄存器进行切换，return_addr(比如RISCV64中的ra)寄存器要加上函数地址
   // (切换寄存器的同时也会切换栈)
   // TODO: We are here
+  extern void context_switch();
   context_switch();
 
   panic("co_yield not implemented yet\n");
