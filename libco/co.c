@@ -23,7 +23,7 @@ struct co {
   struct co* next;
 };
 
-// 用来存放所有协程Co_STATE结构体的链表
+// 用来存放所有协程Co_STATE结构体的链表 (不包括main)
 struct co*link_head = NULL;
 struct co*link_tail = NULL;
 int link_size = 0; // 链表大小
