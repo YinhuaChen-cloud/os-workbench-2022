@@ -79,7 +79,22 @@ void co_wait(struct co *co) {
     co_yield();
   }
   // 释放已经 DONE 了的协程，并且把它从链表中取出
-  co->next
+  if(co->prev && co->next) {
+    co->prev = co->next;
+    co->next = co->prev
+  }
+  else if(!(co->prev) && co->next) { // 链表头
+    link_head = co->next;
+    link_head->prev = NULL;
+  }
+  else if(co->prev && !(co->next)) { // 链表尾
+    link_tail = co->prev;
+    link_tail->next = NULL;
+  }
+  else { // 只剩下这一个节点了
+    link_head = NULL;
+    link_tail = NULL;
+  }
   free(co);
 }
 
