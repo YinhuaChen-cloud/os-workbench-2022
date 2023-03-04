@@ -7,12 +7,11 @@
 
 typedef enum Co_STATE { // 协程状态 RUNNABLE ...
   RUNNABLE,
-  RUNNING,
-  WAITING,
   DONE
 } Co_STATE;
 
 struct co {
+  // 每个协程都得有自己的栈
   // 寄存器状态
 
   // 协程状态
@@ -85,25 +84,33 @@ void co_wait(struct co *co) {
 // 若系统中有多个可运行的协程时 (包括当前协程)，你应当随机选择下一个系统中可运行的协程。
 
 // co_yield 会将当前运行协程的寄存器保存到共享内存中，然后选择一个另一个协程，将寄存器加载到 CPU 上，就完成了 “状态机的切换”；
+
+// 从数组中随机取一个 RUNNABLE 的co结构体，然后切换过去
 void co_yield() {
   // 随机选择一个 RUNNABLE 的协程，继续执行（有可能选到自己）
   // 取 0 ~ CO_MAXSIZE 的一个随机数
   int rand_index;
-  // while(co_size > 0 &&) {
-  //   rand_index = rand() % CO_MAXSIZE; 
-  //   if(NULL == co_array[rand_index] || RUNNABLE != co_array[rand_index]->state) {
-  //     continue;
-  //   } else {
-  //     // 选择到了一个状态为 RUNNABLE 的协程，接下来我们要切换过去
-  //     TODO: We are here
-  //   }
-  // }
+  while(co_size > 0 &&) { // TODO：有可能 co_size > 0，但所有现存的协程状态都不是 RUNNABLE
+    rand_index = rand() % CO_MAXSIZE; 
+    if(NULL == co_array[rand_index] || RUNNABLE != co_array[rand_index]->state) {
+      continue;
+    } else {
+      break;
+    }
+  }
 
-  // 从数组中随机取一个 RUNNABLE 的co结构体，然后切换过去
+  // 现在，rand_index就是一个随机选取的状态为 RUNNABLE 的协程，接下来我们要切换过去
+  // 注意：这里切换去了下一个协程之后，协程切换到main(以及其它协程)时，
+  // 会切换回这里。此时，只要从这里 return，就可以返回到先前调用 yield() 的地方，继续往下执行了
+  // 切换的原理：对通用寄存器进行切换，return_addr(比如RISCV64中的ra)寄存器要加上函数地址
+  // (切换寄存器的同时也会切换栈)
+  // TODO: We are here
+
   panic("co_yield not implemented yet\n");
 }
 // 关于实现寄存器切换，这里要使用内联汇编对寄存器进行直接操作。
-// AbstractMachine 的实现中有一个精巧的 stack_switch_call (x86.h)，可以用于切换堆栈后并执行函数调用，且能传递一个参数，请大家完成阅读理解 (对完成实验有巨大帮助)：
+// AbstractMachine 的实现中有一个精巧的 stack_switch_call (x86.h)，可以用于切换堆栈后并执行函数调用，
+// 且能传递一个参数，请大家完成阅读理解 (对完成实验有巨大帮助)：
 // 认真学学 x86
 
 
