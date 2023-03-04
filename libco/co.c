@@ -20,8 +20,9 @@ struct co {
 };
 
 // 用来存放所有协程Co_STATE结构体的数组 (不包括main)
-#define LINK_MAXSIZE 128 // 数组最大长度为128
+#define CO_MAXSIZE 128 // 数组最大长度为128
 struct co* co_array[LINK_MAXSIZE] = {0}; // 这里存放的是 struct co 指针
+int co_size = 0; // 用来指明协程的数量
 
 // 根据 oldvalue 找到协程数组中对应的元素，然后把该元素替换成 newvalue
 static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
@@ -57,6 +58,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
 
   // 2. 把这个新的结构体存放于数组里, 供后续调度
   co_array_replace(NULL, p);
+  co_size++;
 
   return p; // 程序执行流回到 main 里
 }
@@ -74,6 +76,7 @@ void co_wait(struct co *co) {
   }
   // 释放已经 DONE 了的协程，并且把它从数组中取出
   co_array_replace(co, NULL);
+  co_size--;
 
   free(co);
 }
@@ -83,6 +86,8 @@ void co_wait(struct co *co) {
 
 // co_yield 会将当前运行协程的寄存器保存到共享内存中，然后选择一个另一个协程，将寄存器加载到 CPU 上，就完成了 “状态机的切换”；
 void co_yield() {
+  int rand_index = rand() % CO_MAXSIZE; 
+  // 从数组中随机取一个 RUNNABLE 的co结构体，然后切换过去
   panic("co_yield not implemented yet\n");
 }
 // 关于实现寄存器切换，这里要使用内联汇编对寄存器进行直接操作。
