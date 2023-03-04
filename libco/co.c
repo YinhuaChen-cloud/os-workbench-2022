@@ -25,6 +25,7 @@ struct co {
 };
 
 // TODO：也许我需要为 main 协程单独弄一个struct co结构体？（用来保存栈、以及寄存器状态）
+// 回答：栈不需要，main的从一开始就有，glibc提供的
 
 // 用来存放所有协程Co_STATE结构体的数组 (不包括main)
 #define CO_MAXSIZE 128 // 数组最大长度为128
@@ -115,9 +116,9 @@ void co_yield() {
   // (切换寄存器的同时也会切换栈)
   assert(-1 != rand_index);
   printf("gprs pointer = 0x%p\n", &(co_array[rand_index]->context));
-  extern void context_switch();
+  extern void context_switch(struct context* now_context);
   // extern void context_switch(co_array[rand_index]);
-  context_switch();
+  context_switch(&(co_array[rand_index]->context));
 
   panic("co_yield not implemented yet\n");
 }
