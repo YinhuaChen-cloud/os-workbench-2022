@@ -248,8 +248,33 @@ jmp *(next_rip) // TODO：别人实现跳转的方法，没有使用 return addr
 
 ### 4.4. 实现协程：数据结构
 
+例如，参考实现的 struct co 是这样定义的：
 
+```c
+enum co_status {
+  CO_NEW = 1, // 新创建，还未执行过
+  CO_RUNNING, // 已经执行过
+  CO_WAITING, // 在 co_wait 上等待
+  CO_DEAD,    // 已经结束，但还未释放资源
+};
 
+struct co {
+  char *name;
+  void (*func)(void *); // co_start 指定的入口地址和参数
+  void *arg;
+
+  enum co_status status;  // 协程的状态
+  struct co *    waiter;  // 是否有其他协程在等待当前协程
+  jmp_buf        context; // 寄存器现场 (setjmp.h)
+  uint8_t        stack[STACK_SIZE]; // 协程的堆栈
+};
+```
+
+看起来就像是在《计算机系统基础》中实现的上下文切换！我们推荐大家使用 <font color="red">C 语言标准库中的 setjmp/longjmp 函数</font>来实现寄存器现场的保存和恢复。在《计算机系统基础》实验中，我们已经用汇编代码实现了这两个函数。没有好好做实验的同学，要加油补上啦！
+
+TODO: 1. 了解一下 setjmp/longjmp TODO: we are here 建议一过来就看 setjmp/longjmp, 可以从这里看到尾部
+
+### 4.5. 实现寄存器现场切换
 
 
 ---
@@ -348,6 +373,10 @@ wait的实现：
 问题10: 可以直接修改 rip 寄存器吗？
 
 回答：rip 寄存器是只读寄存器，不能直接修改，只能通过retq返回跳转，以及 “用lea指令将相对地址加载到通用寄存器中，然后使用该寄存器来访问指令或数据。” 的方法来修改 rip 寄存器
+
+问题11: setjmp 和 longjmp 函数是用来干嘛的？
+
+回答：已经写在 learn_example/try_setjmp_longjmp.c 里了，可以自己去看看
 
 ---
 
