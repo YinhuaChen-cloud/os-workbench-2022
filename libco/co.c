@@ -59,11 +59,11 @@ static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
 
 // 当一个协程退出（除了main），将会进入到这个函数
 // 如果是 main，它会回到自己原先的程序，然后直接终止整个程序
-// static void co_exit() {
-//   co_array[running_index]->state = DONE;
-//   // printf("%s is done\n", co_array[running_index]->name);
-//   co_yield();
-// }
+static void co_exit() {
+  co_array[running_index]->state = DONE;
+  // printf("%s is done\n", co_array[running_index]->name);
+  co_yield();
+}
 
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
 // * 新创建的协程从函数 func 开始执行，并传入参数 arg。新创建的协程不会立即执行，而是(调用 co_start 的协程)(这个“调用 co_start 的协程就是main啦”)继续执行。
@@ -98,7 +98,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   p->context.gprs[6] = (uint64_t)(&(p->stack[STACK_SIZE-24])); // TODO(solved):不知为什么16就会报 printf 错误, 8 和 24就可以。 回答：因为x86_64要求堆栈按照16字节对齐
   printf("value of sp = %ld\n", p->context.gprs[6]);
   // 设定状态机的在被销毁时需要进入的函数
-  // *(uint64_t *)(&(p->stack[STACK_SIZE-1])) = (uint64_t)co_exit;
+  *(uint64_t *)(&(p->stack[STACK_SIZE-16])) = (uint64_t)co_exit;
   // 设定状态机的函数入口, 存放到 rsp 指向的地方
   // 这一行是使用 return addr 的设定函数入口的方法
   *(uint64_t *)(&(p->stack[STACK_SIZE-24])) = (uint64_t)func; // 8可以，16不行的原因很可能是少了一些类似 金丝雀guard 之类的东西
