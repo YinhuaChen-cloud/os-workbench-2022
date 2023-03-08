@@ -59,11 +59,11 @@ static void co_array_replace(struct co* oldvalue, struct co* newvalue) {
 
 // 当一个协程退出（除了main），将会进入到这个函数
 // 如果是 main，它会回到自己原先的程序，然后直接终止整个程序
-// static void co_exit() {
-//   co_array[running_index]->state = DONE;
-//   // printf("%s is done\n", co_array[running_index]->name);
-//   co_yield();
-// }
+static void co_exit() {
+  co_array[running_index]->state = DONE;
+  // printf("%s is done\n", co_array[running_index]->name);
+  co_yield();
+}
 
 // co_start(name, func, arg) 创建一个新的协程，并返回一个指向 struct co 的指针 (类似于 pthread_create)。
 // * 新创建的协程从函数 func 开始执行，并传入参数 arg。新创建的协程不会立即执行，而是(调用 co_start 的协程)(这个“调用 co_start 的协程就是main啦”)继续执行。
