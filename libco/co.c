@@ -160,7 +160,10 @@ void co_yield() {
   assert(-1 != rand_index);
   // printf("gprs pointer = 0x%p\n", &(co_array[rand_index]->context));
   // printf("gprs pointer = 0x%p\n", &(co_array[running_index]->context));
-  co_array[running_index]->state = RUNNABLE;
+  if(RUNNING == co_array[running_index]->state) {
+    co_array[running_index]->state = RUNNABLE;
+    // 如果状态是DONE，就不用再转状态了
+  }
   co_array[rand_index]->state = RUNNING;
   volatile int tmp_running_index = running_index;
   running_index = rand_index; 
