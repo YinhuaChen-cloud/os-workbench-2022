@@ -98,7 +98,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   p->context.gprs[6] = (uint64_t)(&(p->stack[STACK_SIZE-24])); // TODO(solved):不知为什么16就会报 printf 错误, 8 和 24就可以。 回答：因为x86_64要求堆栈按照16字节对齐
   printf("value of sp = %ld\n", p->context.gprs[6]);
   // 设定状态机的在被销毁时需要进入的函数
-  *(uint64_t *)(&(p->stack[STACK_SIZE-16])) = (uint64_t)co_exit;
+  *(uint64_t *)(&(p->stack[STACK_SIZE-8])) = (uint64_t)co_exit;
   // 设定状态机的函数入口, 存放到 rsp 指向的地方
   // 这一行是使用 return addr 的设定函数入口的方法
   *(uint64_t *)(&(p->stack[STACK_SIZE-24])) = (uint64_t)func; // 8可以，16不行的原因很可能是少了一些类似 金丝雀guard 之类的东西
