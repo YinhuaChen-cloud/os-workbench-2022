@@ -230,10 +230,10 @@ retq
 首先，co_yield 还是一个函数调用。函数调用就遵循 x86-64 的 calling conventions (System V ABI)：
 
 * 前 6 个参数分别保存在 rdi, rsi, rdx, rcx, r8, r9。当然，co_yield 没有参数，这些寄存器里的数值也没有意义。
-* co_yield 可以任意改写上面的 6 个寄存器的值以及 rax (返回值), r10, r11，返回后 foo 仍然能够正确执行。
-* co_yield 返回时，必须保证 rbx, rsp, rbp, r12, r13, r14, r15 的值和调用时保持一致 (这些寄存器称为 callee saved/non-volatile registers/call preserved, 和 caller saved/volatile/call-clobbered 相反)。
+* co_yield 可以任意改写上面的 6 个寄存器的值以及 rax (返回值), r10, r11，返回后 foo 仍然能够正确执行。 <- 这个指的是被调用函数能够随意使用的寄存器
+* co_yield 返回时，必须保证 rbx, rsp, rbp, r12, r13, r14, r15 的值和调用时保持一致 (这些寄存器称为 callee saved/non-volatile registers/call preserved, 和 caller saved/volatile/call-clobbered 相反)。 <- 这一行和上一行基本讨论了 x86_64 calling convention 中提到的 callee/caller saved registers
 
-换句话说，我们已经有答案了：co_yield 要做的就是把 yield 瞬间的 call preserved registers “封存” 下来 (其他寄存器按照 ABI 约定，co_yield 既然是函数，就可以随意摧毁)，然后执行堆栈 (rsp) 和执行流 (rip) 的切换：
+换句话说，我们已经有答案了：co_yield 要做的就是把 yield 瞬间的 call preserved registers “封存” 下来 (其他寄存器按照 ABI 约定，co_yield 既然是函数，就可以随意摧毁)，然后执行<font color="orange">堆栈 (rsp) 和执行流 (rip) 的切换</font>：
 
 ```asm
 mov (next_rsp), $rsp
@@ -246,7 +246,7 @@ jmp *(next_rip) // TODO：别人实现跳转的方法，没有使用 return addr
 2. 在 co_yield 发生时，将寄存器保存到属于该协程的 struct co 中 (包括 %rsp)； -- checked
 3. 切换到另一个协程执行，找到系统中的另一个协程，然后恢复它 struct co 中的寄存器现场 (包括 %rsp)。 -- checked
 
-### 4.4. 实现协程：数据结构
+### 4.4. 实现协程：数据结构 -- checked(TODO：建议就用这一小节提出的数据结构和定义)
 
 例如，参考实现的 struct co 是这样定义的：
 
@@ -276,6 +276,114 @@ TODO: 1. 了解一下 setjmp/longjmp TODO: we are here 建议一过来就看 set
 
 ### 4.5. 实现寄存器现场切换
 
+分配堆栈是容易的：堆栈直接嵌入在 struct co 中即可，在 co_start 时初始化即可。但麻烦的是如何让 co_start 创建的协程，切换到指定的堆栈执行。AbstractMachine 的实现中有一个精巧的 stack_switch_call (x86.h)，可以用于切换堆栈后并执行函数调用，且能传递一个参数，请大家完成阅读理解 (对完成实验有巨大帮助)：(TODO: stack_switch_call 能够1. 切换堆栈 2. 执行函数调用 3. 传递一个参数)
+
+```c
+static inline void stack_switch_call(void *sp, void *entry, uintptr_t arg) {
+  asm volatile (
+#if __x86_64__
+    "movq %0, %%rsp; movq %2, %%rdi; jmp *%1"
+      : : "b"((uintptr_t)sp), "d"(entry), "a"(arg) : "memory"
+#else
+    "movl %0, %%esp; movl %2, 4(%0); jmp *%1"
+      : : "b"((uintptr_t)sp - 8), "d"(entry), "a"(arg) : "memory"
+#endif
+  );
+}
+```
+
+理解上述函数你需要的文档：GCC-Inline-Assembly-HOWTO。当然，这个文档有些过时，如果还有不明白的地方，gcc 的官方手册是最佳的阅读材料。
+
+## 警告：堆栈对齐
+
+<font color="red">x86-64 要求堆栈按照 16 字节对齐 (x86-64 的堆栈以 8 字节为一个单元)</font>?(TODO: 这很可能就是我的程序会出错的原因)，这是为了确保 SSE 指令集中 XMM 寄存器变量的对齐。如果你的程序遇到了神秘的 Segmentation Fault (可能在某个 libc 的函数中)，如果你用 gdb 确定到 Segmentation Fault 的位置，而它恰好是一条 SSE 指令，例如
+
+movaps %xmm0,0x50(%rsp)
+movaps %xmm1,0x60(%rsp)
+...
+那很可能就是你的堆栈没有正确对齐。我们故意没有说的是，System V ABI (x86-64) 对堆栈对齐的要求，是在 “何时” 做出的——在 call 指令之前按 16 字节对齐，在 call 指令之后就不对齐了。一方面你可以暴力地尝试一下；如果你想更深入地理解这个问题，就需要读懂 stack_switch_call，以及 STFW 关于 ABI 对对齐的要求，或是查看编译出的汇编代码。(TODO: 我认为深入理解这个问题会对今后在 x86_64 上做系统软件开发有很大的帮助)
+
+
+每当 co_yield() 发生时，我们都会选择一个协程继续执行，此时必定为以下两种情况之一 (思考为什么)：
+
+1. 选择的协程是新创建的，此时该协程还没有执行过任何代码，我们需要首先执行 stack_switch_call 切换堆栈，然后开始执行协程的代码；
+2. 选择的协程是调用 yield() 切换出来的，此时该协程已经调用过 setjmp 保存寄存器现场(TODO: 看起来 setjmp 可以在同一个地方调用多次？不过我上一次自己写代码尝试了一下好像不行，等下再试试)，我们直接 longjmp 恢复寄存器现场即可。
+
+当然，上述过程描述相当的抽象；你可能会花一点时间，若干次试错，才能实现第一次切换到另一个协程执行——当然，这会让你感到非常的兴奋。之后，你还会面对一些挑战，例如如何处理 co_wait，但把这些难关一一排除以后，你会发现你对计算机系统 (以及 “程序是个状态机”) 的理解更深刻了。
+
+```
+⚠️ 用好 gdb (TODO: 这个一定要做啊！)
+gdb 是这个实验的好帮手，无论如何都要逼自己熟练掌握。例如，你可以试着调试一小段 setjmp/longjmp 的代码，来观察 setjmp/longjmp 是如何处理寄存器和堆栈的，例如是否只保存了 volatile registers 的值？如何实现堆栈的切换？堆栈式如何对齐的？
+
+int main() {
+    int n = 0;
+    jmp_buf buf;
+    setjmp(buf);
+    printf("Hello %d\n", n);
+    longjmp(buf, n++);
+}
+无论你觉得你理解得多么 “清楚”，亲手调试过代码后的感觉仍是很不一样的。
+```
+
+## 4.6. 实现协程
+
+```
+非常难理解？坚持住！
+没错，的确很难理解。如果你没有完成《计算机系统基础》中的 setjmp/longjmp 实验，你需要多读一读 setjmp/longjmp 的文档和例子——这是很多高端面试职位的必备题目。如果你能解释得非常完美，就说明你对 C 语言有了脱胎换骨的理解。setjmp/longjmp 的 “寄存器快照” 机制还被用来做很多有趣的 hacking，例如实现事务内存、在并发 bug 发生以后的线程本地轻量级 recovery 等等。
+
+setjmp/longjmp 类似于保存寄存器现场/恢复寄存器现场的行为，其实模拟了操作系统中的上下文切换。因此如果你彻底理解了这个例子，你们一定会觉得操作系统也不过如此——我们在操作系统的进程之上又实现了一个迷你的 “操作系统”。类似的实现还有 AbstractMachine 的native，它是通过 ucontext.h 实现的，有兴趣的同学也可以尝试阅读 AbstractMachine 的代码。(TODO: 这部分代码也可以读读，也许会很有收获)
+```
+
+在参考实现中，我们维护了 “当前运行的协程” 的指针 (这段代码非常类似于操作系统中，为每一个 CPU 维护一个 “当前运行的进程”)：
+
+```c
+struct co *current;
+```
+
+这样，在 co_yield 时，我们就知道要将寄存器现场保存到哪里。我们使用的代码是
+
+```c
+void co_yield() {
+  int val = setjmp(current->context);
+  if (val == 0) {
+    // ?
+  } else {
+    // ?
+  }
+}
+```
+
+在上面的代码中，setjmp 会返回两次：
+
+1. 在 co_yield() 被调用时，setjmp 保存寄存器现场后会立即返回 0，此时我们需要选择下一个待运行的协程 (相当于修改 current)，并切换到这个协程运行。
+2. setjmp 是由另一个 longjmp 返回的，此时一定是因为某个协程调用 co_yield()，此时代表了寄存器现场的恢复，因此不必做任何操作，直接返回即可。
+
+最后，框架代码里有一行奇怪的 CFLAGS += -U_FORTIFY_SOURCE，用来防止 __longjmp_chk 代码检查到堆栈切换以后报错 (当成是 stack smashing)。Google 的 sanitizer 也遇到了相同的问题。(TODO: 这个东西感觉可以多了解了解，也许以后会少走很多弯路)
+
+## 4.7. 资源初始化、管理和释放
+```
+需要初始化？
+如果你希望在程序运行前完成一系列的初始化工作 (例如分配一些内存)，可以定义 __attribute__((constructor)) 属性的函数，它们会在 main 执行前被运行。我们在课堂上已经讲解过。
+```
+
+这个实验最后的麻烦是管理 co_start 时分配的 struct co 结构体资源。很多时候，我们的库函数都涉及到资源的管理，在面向 OJ 编程时，大家养成了很糟糕的习惯：只管申请、不管释放，依赖操作系统在进程结束后自动释放资源。但如果是长期运行的程序，这些没有释放但又不会被使用的泄露资源就成了很大但问题，例如在 Windows XP 时代，桌面 Windows 是没有办法做到开机一星期的，一周之后机器就一定会变得巨卡无比。
+
+管理内存说起来轻巧——一次分配对应一次回收即可，但协程库中的资源管理有些微妙 (但并不复杂)，因为 co_wait 执行的时候，有两种不同的可能性：
+
+1. 此时协程已经结束 (func 返回)，这是完全可能的。此时，co_wait 应该直接回收资源。
+2. 此时协程尚未结束，因此 co_wait 不能继续执行，必须调用 co_yield 切换到其他协程执行，直到协程结束后唤醒。
+
+希望大家仔细考虑好每一种可能的情况，保证你的程序不会在任何一种情况下 crash 或造成资源泄漏。然后你会发现，假设每个协程都会被 co_wait 一次，且在 co_wait 返回时释放内存是一个几乎不可避免的设计：如果允许在任意时刻、任意多次等待任意协程，那么协程创建时分配的资源就无法做到自动回收了——即便一个协程结束，我们也无法预知未来是否还会执行对它的 co_wait，而对已经回收的 (非法) 指针的 co_wait 将导致 undefined behavior。C 语言中另一种常见 style 是让用户管理资源的分配和释放，显式地提供 co_free 函数，在用户确认今后不会使用时释放资源。
+
+资源管理一直是计算机系统世界的难题，至今很多系统还受到资源泄漏、use-after-free 的困扰。例如，顺着刚才资源释放的例子，你可能会感觉 pthread 线程库似乎有点麻烦：pthread_create() 会修改一个 pthread_t 的值，线程返回以后资源似乎应该会被释放。那么：
+
+* 如果 pthread_join 发生在结束后不久，资源还未被回收，函数会立即返回。
+* 如果 pthread_join 发生在结束以后一段时间，可能会得到 ESRCH (no such thread) 错误。
+* 如果 pthread_join 发生在之后很久很久很久很久，资源被释放又被再次复用 (pthread_t 是一个的确可能被复用的整数)，我不就 join 了另一个线程了吗？这恐怕要出大问题。
+
+实际上，pthread 线程默认是 “joinable” 的。joinable 的线程只要没有 join 过，资源就一直不会释放。特别地，文档里写明： Failure to join with a thread that is joinable (i.e., one that is not detached), produces a "zombie thread". Avoid doing this, since each zombie thread consumes some system resources, and when enough zombie threads have accumulated, it will no longer be possible to create new threads (or processes).
+
+这就是实际系统中各种各样的 “坑”。在《操作系统》这门课程中，我们尽量不涉及这些复杂的行为，而是力图用最少的代码把必要的原理解释清楚。当大家对基本原理有深入的理解后，随着经验的增长，就会慢慢考虑到更周全的系统设计。
 
 ---
 
