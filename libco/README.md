@@ -296,7 +296,7 @@ static inline void stack_switch_call(void *sp, void *entry, uintptr_t arg) {
 
 ## 警告：堆栈对齐
 
-<font color="red">x86-64 要求堆栈按照 16 字节对齐 (x86-64 的堆栈以 8 字节为一个单元)</font>?(TODO: 这很可能就是我的程序会出错的原因)，这是为了确保 SSE 指令集中 XMM 寄存器变量的对齐。如果你的程序遇到了神秘的 Segmentation Fault (可能在某个 libc 的函数中)，如果你用 gdb 确定到 Segmentation Fault 的位置，而它恰好是一条 SSE 指令，例如
+<font color="red">x86-64 要求堆栈按照 16 字节对齐 (x86-64 的堆栈以 8 字节为一个单元)</font>?(TODO(solved): 这很可能就是我的程序会出错的原因 回答：这就是我的程序之前会出错的原因)，这是为了确保 SSE 指令集中 XMM 寄存器变量的对齐。如果你的程序遇到了神秘的 Segmentation Fault (可能在某个 libc 的函数中)，如果你用 gdb 确定到 Segmentation Fault 的位置，而它恰好是一条 SSE 指令，例如
 
 movaps %xmm0,0x50(%rsp)
 movaps %xmm1,0x60(%rsp)
@@ -485,6 +485,10 @@ wait的实现：
 问题11: setjmp 和 longjmp 函数是用来干嘛的？
 
 回答：已经写在 learn_example/try_setjmp_longjmp.c 里了，可以自己去看看
+
+问题12: SSE 指令集是啥？ XMM 寄存器是啥？为啥在call指令之前要求堆栈按16字节对齐，在call指令之后就不对齐了呢？
+
+回答：TODO... 有时间、有基础再考虑。现在只知道x86_64 堆栈要按16字节对齐就行了
 
 ---
 

@@ -22,7 +22,7 @@ struct context {
 };
 
 #define STACK_SIZE 65536
-// TODO: main的结构体应该不会被free?
+// TODO(solved): main的结构体应该不会被free? 回答：是的，不会被free
 struct co {
   // 协程的名字（只是为了方便debug）
   const char *name;
@@ -34,7 +34,7 @@ struct co {
   Co_STATE state;
 };
 
-// TODO：也许我需要为 main 协程单独弄一个struct co结构体？（用来保存栈、以及寄存器状态）
+// TODO(solved)：也许我需要为 main 协程单独弄一个struct co结构体？（用来保存栈、以及寄存器状态）
 // 回答：main 协程的上下文也需要放进 context 里，放进数组中，否则，其它线程无法通过调用
 // co_yield 切换回到 main 协程里，但main不需要自己的stack，它已经有了glibc提供的stack
 
@@ -142,8 +142,7 @@ void co_yield() {
   // 随机选择一个 RUNNABLE 的协程，继续执行（有可能选到自己）
   // 取 0 ~ CO_MAXSIZE 的一个随机数
   int rand_index = -1;
-  // while(co_size > 0 &&) { // TODO：有可能 co_size > 0，但所有现存的协程状态都不是 RUNNABLE
-  while(co_size > 1) {  // TODO: co_size 应该最少为1 - main？
+  while(co_size > 1) {  // TODO(solved): co_size 应该最少为1 - main？ 回答：是的，main没了，整个程序就消失了
     rand_index = rand() % CO_MAXSIZE; 
     if(NULL == co_array[rand_index] || RUNNABLE != co_array[rand_index]->state) {
       continue;
