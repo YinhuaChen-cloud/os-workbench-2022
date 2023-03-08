@@ -95,7 +95,7 @@ struct co *co_start(const char *name, void (*func)(void *), void *arg) {
   p->name = name;
   // 设定状态机的栈，函数入口、函数参数（特别注意，栈顶是越来越往下的，所以要设置在数组的尾部）
   // 设定状态机的栈指针，同时也是在设定栈（只需要设定 rsp，不需要设定 rbp）
-  p->context.gprs[6] = (uint64_t)(&(p->stack[STACK_SIZE-1])); // TODO:不知为什么16就会报 printf 错误, 8 和 24就可以。似乎是以16为单位触发错误
+  p->context.gprs[6] = (uint64_t)(&(p->stack[STACK_SIZE-2])); // TODO:不知为什么16就会报 printf 错误, 8 和 24就可以。似乎是以16为单位触发错误
   printf("value of sp = %ld\n", p->context.gprs[6]);
   // 设定状态机的在被销毁时需要进入的函数
   // *(uint64_t *)(&(p->stack[STACK_SIZE-1])) = (uint64_t)co_exit;
