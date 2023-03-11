@@ -1,4 +1,5 @@
 NAME := amgame
+# SRCS 表示为了 run 起来的 .c 代码。 AM 的相关源代码则用 AM_SRCS 表示
 SRCS := $(shell find -L ./src/ -name "*.c")
 export MODULE  := L0
  # := 的含义是覆盖之前的值
