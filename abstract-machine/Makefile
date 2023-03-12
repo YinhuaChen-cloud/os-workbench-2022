@@ -187,6 +187,8 @@ archive: $(ARCHIVE) # <- @$(MAKE) -s -C $(AM_HOME)/$* archive 的规则
 # /home/chenyinhua/sda3/cyhos/os-workbench-2022/amgame/build/x86_64-qemu/./src/game.o
 # In image-dep, LIBS = am klib (可以通过 $(LIBS): %: 这个规则得到 )
 # image-dep 属于 .PHONY
+# OBJS -- checked, 是通过 CC -c -o 编译 amgame/src/ 下的 .c 文件出来的
+# LIBS -- doing TODO: we are here
 image-dep: $(OBJS) am $(LIBS)
 	@echo "In image-dep, OBJS = $(OBJS)"
 	@echo "In image-dep, LIBS = $(LIBS)"
